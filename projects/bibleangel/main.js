@@ -1,15 +1,30 @@
 import * as THREE from 'three';
+import Stats  from 'stats.js';
+
+const start = Date.now();
+
+const stats = new Stats();
+stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 const listener = new THREE.AudioListener();
 const sound = new THREE.Audio( listener );
 const analyser = new THREE.AudioAnalyser( sound, 32 );
+const renderer = new THREE.WebGLRenderer();
+const eyeTexture = new THREE.TextureLoader().load('./eye.jpg' ); 
+const eyeTexture2 = new THREE.TextureLoader().load('./eye2.jpg' );
+const torusGoldTexture = new THREE.TextureLoader().load('./foil.jpg' );
+const torusEyeMaterial = new THREE.MeshBasicMaterial( { map: eyeTexture2 } );
+const cubeEyeMaterial = new THREE.MeshBasicMaterial( { map: eyeTexture } );
+const greenMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+
+let freqData = null;
 
 camera.position.set( 0, 0, 100 );
+camera.position.z = 6;
 camera.lookAt( 0, 0, 0 );
-
-const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
@@ -35,29 +50,32 @@ const startAudio = () => {
     });
 }
 
+const togglePlayback = () => {
+    if (sound.isPlaying) {
+        sound.pause();
+    } else {
+        sound.play();
+    }
+}
+
 const init = () => {
-    const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-    const eyeTexture = new THREE.TextureLoader().load('./eye.jpg' ); 
-    const eyeTexture2 = new THREE.TextureLoader().load('./eye2.jpg' );
-    const material = new THREE.MeshBasicMaterial( { map: eyeTexture } );
-    const greenMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-    const cube = new THREE.Mesh( geometry, material );
+    document.addEventListener('click', togglePlayback);
+
+
+    const cubeGeometry = new THREE.BoxGeometry( 1, 1, 1 );
+    const cube = new THREE.Mesh( cubeGeometry, cubeEyeMaterial );
     const runCube = () => {
         scene.add( cube );
     }
-    
-    camera.position.z = 6;
-    
-    
-    const points = [];
-    points.push( new THREE.Vector3( - 3, 0, 0 ) );
-    points.push( new THREE.Vector3( 0, 3, 0 ) );
-    points.push( new THREE.Vector3( 3, 0, 0 ) );
-    points.push( new THREE.Vector3( 0, - 3, 0 ) );
-    points.push( new THREE.Vector3( - 3, 0, 0 ) );
-    
-    const linesGeometry = new THREE.BufferGeometry().setFromPoints( points );
-    
+
+    const points = [
+        new THREE.Vector3( - 3, 0, 0 ),
+        new THREE.Vector3( 0, 3, 0 ),
+        new THREE.Vector3( 3, 0, 0 ),
+        new THREE.Vector3( 0, - 3, 0 ),
+        new THREE.Vector3( - 3, 0, 0 )
+    ];
+
     const getNoisedlinesGeometry = () => {
         const noisedPoints = [];
         for (let i = 0; i < points.length; i++) {
@@ -71,7 +89,7 @@ const init = () => {
         }
         return new THREE.BufferGeometry().setFromPoints( noisedPoints );
     }
-    
+
     const extraLines = [];
     const addMoreLines = () => {
         const randomColor = 0xffffff * Math.random();
@@ -83,7 +101,7 @@ const init = () => {
         extraLines.push(line);
         scene.add( line );
     }
-    
+
     const getRotationSpeedFromFrequency = () => {
         const averageFrequency = analyser.getAverageFrequency();
         return averageFrequency / 4000;
@@ -97,36 +115,13 @@ const init = () => {
         return randomAxis;
     }
 
-    const ringItems = [];
-    const create3dRing = () => {
-        const ringRotation = getRandomRotationOnAxis();
-        const ringGeometry = new THREE.RingGeometry( 3.4, 3.5, 32 ); 
-        const ringMaterial = new THREE.MeshBasicMaterial( { color: 0xCCCC00, side: THREE.DoubleSide } );
-        const ring = new THREE.Mesh( ringGeometry, ringMaterial );
-        const ringMultiply = 20;
-        for (let i = 0; i < ringMultiply; i++) {
-            const ringClone = ring.clone();
-            ringClone.rotation.x = ringRotation.x * i;
-            ringClone.rotation.y = ringRotation.y * i;
-            ringClone.rotation.z = ringRotation.z * i;
-            scene.add( ringClone );
-            ringItems.push(ringClone);
-        }
-        // ringItems.push(ring);
-        // scene.add( ring );
-    }
-    // create3dRing();
-
-    const eyeMaterial = new THREE.MeshBasicMaterial( { map: eyeTexture2 } );
     const toruses = [];
     const torusEyes = [];
     const createTorus = () => {
         const torusGeometry = new THREE.TorusGeometry( 3.5, 0.2, 12, 48 );
-        // const torusMaterial = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
-        const torusEyeTexture = new THREE.TextureLoader().load('./foil.jpg' );
-        torusEyeTexture.wrapS = THREE.RepeatWrapping
-        torusEyeTexture.repeat.set( 5, 1 );
-        const torusMaterial = new THREE.MeshBasicMaterial( { map: torusEyeTexture } );
+        torusGoldTexture.wrapS = THREE.RepeatWrapping
+        torusGoldTexture.repeat.set( 5, 1 );
+        const torusMaterial = new THREE.MeshBasicMaterial( { map: torusGoldTexture } );
         const torus = new THREE.Mesh( torusGeometry, torusMaterial );
         const torusMultiply = 4;
         // each torus should be slightly smaller than the previous one
@@ -138,14 +133,12 @@ const init = () => {
             torusClone.rotation.x = Math.random() * 2 * Math.PI;
             torusClone.rotation.y = Math.random() * 2 * Math.PI;
             torusClone.rotation.z = Math.random() * 2 * Math.PI;
-            // ? creates eyes on the 3d torus
-            // const eyeMultiply = 20;
             // Eye Multiply should be based on the radius of the torus
             // eyes should be placed on the torus in a event circular pattern
             const eyeMultiply = Math.floor(torusClone.geometry.parameters.radius * 10);
             for (let j = 0; j < eyeMultiply; j++) {
                 const eyeGeometry = new THREE.SphereGeometry( 0.1, 32, 32 );
-                const eye = new THREE.Mesh( eyeGeometry, eyeMaterial );
+                const eye = new THREE.Mesh( eyeGeometry, torusEyeMaterial );
                 const angle = (Math.PI * 2) / eyeMultiply;
                 const x = Math.cos(angle * j) * torusClone.geometry.parameters.radius * 1.035;
                 const y = Math.sin(angle * j) * torusClone.geometry.parameters.radius * 1.035;
@@ -161,22 +154,33 @@ const init = () => {
     }
     createTorus();
 
+    const createBackgroundStars = () => {
+        const starGeometry = new THREE.SphereGeometry( 0.1, 32, 32 );
+        const starMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+        const star = new THREE.Mesh( starGeometry, starMaterial );
+        const starMultiply = 1000;
+        for (let i = 0; i < starMultiply; i++) {
+            const starClone = star.clone();
+            const x = Math.random() * 100 - 50;
+            const y = Math.random() * 100 - 50;
+            const z = Math.random() * 100 - 50;
+            starClone.position.set(x, y, z);
+            const starSize = Math.random() * 0.5;
+            starClone.scale.set(starSize, starSize, starSize);
+            scene.add( starClone );
+        }
+    }
+    createBackgroundStars();
+
     function animate() {
-        requestAnimationFrame( animate );
-    
+        stats.begin(); // Begin stats.js
+        requestAnimationFrame( animate )
+
         // ? Basic 3d Cube
         runCube();
         cube.rotation.x += 0.01;
         cube.rotation.y += 0.01;
 
-        
-        // console.log(getRotationSpeedFromFrequency());
-    
-        // ? Basic 2d Lines around 0,0,0
-        // runLines();
-        // line.rotation.x += 0.01;
-        // line.rotation.y += 0.01;
-    
         // ? Extra Lines
         addMoreLines();
         const linesRotationSpeed = getRotationSpeedFromFrequency();
@@ -185,24 +189,7 @@ const init = () => {
             extraLines[i].rotation.y += linesRotationSpeed;
         }
 
-        // ? 3d Ring
-        // const ringRotationSpeed = 0.01;
-        // for (let i = 0; i < ringItems.length; i++) {
-        //     ringItems[i].rotation.x += ringRotationSpeed;
-        //     ringItems[i].rotation.y += ringRotationSpeed;
-        // }
-
-        // // ?? makes 3d rings breathe with perlin noise
-        // for (let i = 0; i < ringItems.length; i++) {
-        //     const ringItem = ringItems[i];
-        //     const time = Date.now() * 0.001;
-        //     const scale = 0.8 + Math.sin( time ) * 0.2;
-        //     ringItem.scale.set( scale, scale, scale );
-        // }
-
-
-        // eyeMaterial.side = THREE.DoubleSide;
-        // ? makes eyes rotate individually in random direction
+        // ? Torus Eyes Rotating Randonmly
         const eyeRotationSpeed = 0.1
         for (let i = 0; i < torusEyes.length; i++) {
             const eye = torusEyes[i];
@@ -211,6 +198,7 @@ const init = () => {
             eye.rotation.y += eyeRotationSpeed * randomAxis.y;
             eye.rotation.z += eyeRotationSpeed * randomAxis.z;
         }
+
         // ? Torus rotate individually in random direction
         const torusRotationSpeed = getRotationSpeedFromFrequency();
         for (let i = 0; i < toruses.length; i++) {
@@ -219,27 +207,25 @@ const init = () => {
             torus.rotation.x += torusRotationSpeed * randomAxis.x;
             torus.rotation.y += torusRotationSpeed * randomAxis.y;
             torus.rotation.z += torusRotationSpeed * randomAxis.z;
-
-            // ? makes torus breathe with perlin noise
-            // const currentTorusScale = torus.scale.x;
-            // const time = Date.now() * 0.001;
-            // const newScale = currentTorusScale + Math.sin( time ) * 0.001;
-            // torus.scale.set( newScale, newScale, newScale );
         }
-    
-    
+
         // ? rotate camera around 0,0,0
         let currentLocation = new THREE.Vector3();
         currentLocation.copy(camera.position);
         const rotationSpeed = 0.005;
-        const x = currentLocation.x * Math.cos(rotationSpeed) - currentLocation.z * Math.sin(rotationSpeed);
-        const z = currentLocation.x * Math.sin(rotationSpeed) + currentLocation.z * Math.cos(rotationSpeed);
-        camera.position.x = x;
-        camera.position.z = z;
+        const cameraX = currentLocation.x * Math.cos(rotationSpeed) - currentLocation.z * Math.sin(rotationSpeed);
+        const cameraZ = currentLocation.x * Math.sin(rotationSpeed) + currentLocation.z * Math.cos(rotationSpeed);
+        camera.position.x = cameraX;
+        camera.position.z = cameraZ;
         camera.lookAt( 0, 0, 0 );
-    
-    
+
+        freqData = analyser.getFrequencyData();
+        if (sound.isPlaying) {
+            console.log(freqData);
+        }
+
         renderer.render( scene, camera );
+        stats.end(); // End stats.js
     }
     animate();
 }
