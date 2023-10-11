@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm vite"
+    "start": "npx vite --host",
+    "build": "npx vite build",
+    "serve": "npx vite preview"
   },
   "author": "",
   "license": "ISC",
