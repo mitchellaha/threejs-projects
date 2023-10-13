@@ -1,5 +1,9 @@
 import * as THREE from 'three';
 import Stats  from 'stats.js';
+import foil from './foil.jpg'
+import eye from './eye.jpg'
+import eye2 from './eye2.jpg'
+import voices from './voices.mp3'
 
 const start = Date.now();
 
@@ -13,9 +17,11 @@ const listener = new THREE.AudioListener();
 const sound = new THREE.Audio( listener );
 const analyser = new THREE.AudioAnalyser( sound, 32 );
 const renderer = new THREE.WebGLRenderer();
-const eyeTexture = new THREE.TextureLoader().load('./eye.jpg' ); 
-const eyeTexture2 = new THREE.TextureLoader().load('./eye2.jpg' );
-const torusGoldTexture = new THREE.TextureLoader().load('./foil.jpg' );
+
+
+const eyeTexture = new THREE.TextureLoader().load(eye ); 
+const eyeTexture2 = new THREE.TextureLoader().load(eye2 );
+const torusGoldTexture = new THREE.TextureLoader().load(foil );
 const torusEyeMaterial = new THREE.MeshBasicMaterial( { map: eyeTexture2 } );
 const cubeEyeMaterial = new THREE.MeshBasicMaterial( { map: eyeTexture } );
 const greenMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
@@ -40,7 +46,7 @@ function startClicked() {
 
 const startAudio = () => {
     const audioLoader = new THREE.AudioLoader();
-    audioLoader.load( './voices.mp3', function( buffer ) {
+    audioLoader.load( voices, function( buffer ) {
         sound.autoplay = false;
         sound.setBuffer( buffer );
         sound.setLoop( true );
