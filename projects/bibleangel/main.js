@@ -19,6 +19,7 @@ const analyser = new THREE.AudioAnalyser( sound, 32 );
 const renderer = new THREE.WebGLRenderer();
 
 
+
 const eyeTexture = new THREE.TextureLoader().load(eye ); 
 const eyeTexture2 = new THREE.TextureLoader().load(eye2 );
 const torusGoldTexture = new THREE.TextureLoader().load(foil );
