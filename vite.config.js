@@ -1,5 +1,19 @@
 import { defineConfig } from 'vite';
 import path from 'path';
+import { fileURLToPath } from 'node:url';
+import fs from 'fs';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const allProjects = fs.readdirSync(path.resolve(__dirname, 'projects')).map((project) => {
+    if (project === '.DS_Store') {
+        return null;
+    }
+    return {
+        name: project,
+        path: path.resolve(__dirname, `projects/${project}/index.html`),
+    };
+});
+const projects = allProjects.filter((project) => project !== null);
 
 export default defineConfig({
     build: {
@@ -7,11 +21,10 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: path.resolve(__dirname, 'index.html'),
-                bibleangel: path.resolve(__dirname, 'projects/bibleangel/index.html'),
-                cubeofaggression: path.resolve(__dirname, 'projects/cubeofaggression/index.html'),
-                mirrortest: path.resolve(__dirname, 'projects/mirrortest/index.html'),
-                tunnelvision: path.resolve(__dirname, 'projects/tunnelvision/index.html'),
-                // add more projects as needed
+                ...projects.reduce((acc, project) => {
+                    acc[project.name] = project.path;
+                    return acc;
+                }, {}),
             },
         },
     },
