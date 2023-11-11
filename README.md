@@ -11,7 +11,7 @@
 
 - Biblically Accurate Angel speaking in voices by flume
 
-### Cube of Aggression
+### Cube of recycle
 
 - ...
 
@@ -23,3 +23,8 @@
 ### Tunnel Vision
 
 - If you stare into the void long enough, the void will follow you
+
+
+### Must go deeper
+
+- also more aggressive variation
