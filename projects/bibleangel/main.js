@@ -6,6 +6,7 @@ import eye2 from './eye2.jpg'
 import voices from './voices.mp3'
 
 const start = Date.now();
+const isMobile = window.innerWidth < 600;
 
 const stats = new Stats();
 stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
@@ -30,44 +31,62 @@ const greenMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 let freqData = null;
 
 camera.position.set( 0, 0, 100 );
-camera.position.z = 6;
+camera.position.z = 8;
+if (isMobile) {
+    camera.position.z = 15;
+}
 camera.lookAt( 0, 0, 0 );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 
-const startButton = document.getElementById( 'startButton' );
-startButton.addEventListener( 'click', startClicked );
-
 function startClicked() {
     startButton.removeEventListener( 'click', startClicked );
     startButton.style.display = 'none';
-    startAudio();
+    playAudio();
+    // document.addEventListener('click', togglePlayback);
 }
 
 const startAudio = () => {
-    const audioLoader = new THREE.AudioLoader();
-    audioLoader.load( voices, function( buffer ) {
-        sound.autoplay = false;
-        sound.setBuffer( buffer );
-        sound.setLoop( true );
-        sound.setVolume( 0.5 );
-        sound.play();
-        init();
-    });
+    // const audioLoader = new THREE.AudioLoader();
+    // audioLoader.load( voices, function( buffer ) {
+    //     sound.autoplay = false;
+    //     sound.setBuffer( buffer );
+    //     sound.setLoop( true );
+    //     sound.setVolume( 0.5 );
+    //     sound.play();
+    //     init();
+    // });
+    sound.play();
+    init();
+}
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load( voices, function( buffer ) {
+    sound.autoplay = false;
+    sound.setBuffer( buffer );
+    sound.setLoop( true );
+    sound.setVolume( 0.5 );
+    // sound.play();
+    // init();
+});
+
+const playAudio = () => {
+    startAudio();
 }
 
+const startButton = document.getElementById( 'startButton' );
+startButton.addEventListener( 'click', startClicked );
+
 const togglePlayback = () => {
-    if (sound.isPlaying) {
-        sound.pause();
-    } else {
+    if (!sound.isPlaying) {
         sound.play();
+    } else {
+        sound.pause();
     }
 }
 
 const init = () => {
-    document.addEventListener('click', togglePlayback);
-
+    // document.addEventListener('click', togglePlayback);
 
     const cubeGeometry = new THREE.BoxGeometry( 1, 1, 1 );
     const cube = new THREE.Mesh( cubeGeometry, cubeEyeMaterial );
@@ -236,3 +255,4 @@ const init = () => {
     }
     animate();
 }
+// init();
