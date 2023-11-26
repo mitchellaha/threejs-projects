@@ -95,11 +95,11 @@ const init = () => {
     }
 
     const points = [
-        new THREE.Vector3( - 3, 0, 0 ),
-        new THREE.Vector3( 0, 3, 0 ),
-        new THREE.Vector3( 3, 0, 0 ),
-        new THREE.Vector3( 0, - 3, 0 ),
-        new THREE.Vector3( - 3, 0, 0 )
+        new THREE.Vector3( - 1, 0, 0 ),
+        new THREE.Vector3( 0, 1, 0 ),
+        new THREE.Vector3( 1, 0, 0 ),
+        new THREE.Vector3( 0, - 1, 0 ),
+        new THREE.Vector3( - 1, 0, 0 )
     ];
 
     const getNoisedlinesGeometry = () => {
@@ -130,7 +130,23 @@ const init = () => {
 
     const getRotationSpeedFromFrequency = () => {
         const averageFrequency = analyser.getAverageFrequency();
+        return averageFrequency / 3300;
+    }
+
+    const getInverseRotationSpeedFromFrequency = () => {
+        const averageFrequency = analyser.getAverageFrequency();
         return averageFrequency / 4000;
+    }
+
+    const expandLinesOnFreqData = () => {
+        const freqData = analyser.getFrequencyData();
+        for (let i = 0; i < extraLines.length; i++) {
+            // get random frequency data
+            const rFreq = freqData[Math.floor(Math.random() * freqData.length)];
+            const line = extraLines[i];
+            const lineScale = 1 + (rFreq / 200);
+            line.scale.set(lineScale, lineScale, lineScale);
+        }
     }
 
     const getRandomRotationOnAxis = () => {
@@ -209,11 +225,12 @@ const init = () => {
 
         // ? Extra Lines
         addMoreLines();
-        const linesRotationSpeed = getRotationSpeedFromFrequency();
+        const linesRotationSpeed = getInverseRotationSpeedFromFrequency();
         for (let i = 0; i < extraLines.length; i++) {
             extraLines[i].rotation.x += linesRotationSpeed;
             extraLines[i].rotation.y += linesRotationSpeed;
         }
+        expandLinesOnFreqData();
 
         // ? Torus Eyes Rotating Randonmly
         const eyeRotationSpeed = 0.1
